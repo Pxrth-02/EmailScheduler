@@ -1,0 +1,5 @@
+
+# environment files (examples are committed, real values never are)
+.env
+.env.*
+!.env.example
