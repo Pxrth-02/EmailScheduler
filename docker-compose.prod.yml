@@ -1,0 +1,125 @@
+# Production stack for one Linux host: the same MySQL, Redis and Elasticsearch as development,
+# the app image (API + worker) built from this repo, and Caddy for automatic HTTPS.
+#
+#   cp .env.production.example .env.production      # fill it in
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+#   docker compose -f docker-compose.prod.yml --env-file .env.production --profile search up -d --build   # with Elasticsearch
+#
+# Only Caddy publishes ports (80/443). Databases are reachable from the app containers only.
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-emailscheduler}
+      MYSQL_USER: ${MYSQL_USER:-app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -uroot -p"$$MYSQL_ROOT_PASSWORD" --silent']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    # AOF so delayed jobs survive a restart; noeviction because BullMQ must never lose keys.
+    command:
+      [
+        'redis-server',
+        '--appendonly',
+        'yes',
+        '--appendfsync',
+        'everysec',
+        '--maxmemory-policy',
+        'noeviction',
+      ]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.2
+    restart: unless-stopped
+    profiles: ['search']
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fs http://localhost:9200/_cluster/health || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 12
+
+  api:
+    build: .
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: mysql://${MYSQL_USER:-app}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE:-emailscheduler}
+      REDIS_URL: redis://redis:6379
+    # Apply pending migrations, then serve. `migrate deploy` needs no shadow database, so the
+    # limited app user is enough here.
+    command: ['sh', '-c', 'npx prisma migrate deploy && node dist/server.js']
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "fetch(\"http://localhost:4000/health\").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"',
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+  worker:
+    build: .
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: mysql://${MYSQL_USER:-app}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE:-emailscheduler}
+      REDIS_URL: redis://redis:6379
+    command: ['node', 'dist/worker.js']
+    depends_on:
+      api:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+volumes:
+  mysql_data:
+  redis_data:
+  es_data:
+  caddy_data:
+  caddy_config:
