@@ -46,7 +46,11 @@ export async function notifyRateLimitHit(redis: Redis, hit: RateLimitHit): Promi
       'slack rate-limit notice sent',
     );
   } catch (err) {
-    logger.warn({ err, senderId: hit.senderId }, 'slack notification failed');
+    await redis.del(dedupeKey);
+    logger.warn(
+      { err, senderId: hit.senderId },
+      'slack notification failed, will retry on next hit',
+    );
   }
 }
 
