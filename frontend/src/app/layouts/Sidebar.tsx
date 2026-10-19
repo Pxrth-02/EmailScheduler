@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router';
 import { useEmailCounts } from '../../features/emails/hooks.ts';
 import { cn } from '../../lib/cn.ts';
 import { formatCount } from '../../lib/format.ts';
+import { useTheme } from '../../lib/theme.tsx';
 import type { User } from '../../types/api.ts';
 import { UserMenu } from './UserMenu.tsx';
 
@@ -52,6 +53,7 @@ function NavItem({
 export function Sidebar({ user }: { user: User }) {
   const counts = useEmailCounts();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <aside className="fixed left-0 top-0 h-full w-[260px] bg-surface-container-low border-r border-outline-variant/40 z-50 flex flex-col justify-between select-none">
@@ -145,10 +147,14 @@ export function Sidebar({ user }: { user: User }) {
           </div>
           <button
             type="button"
-            className="w-7 h-7 flex items-center justify-center rounded-lg border border-outline-variant/50 text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors"
-            title="Toggle visual mode"
+            onClick={toggleTheme}
+            className="w-7 h-7 flex items-center justify-center rounded-lg border border-outline-variant/50 text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            <span className="material-symbols-outlined text-[16px]">dark_mode</span>
+            <span className="material-symbols-outlined text-[16px]">
+              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+            </span>
           </button>
         </div>
       </div>
