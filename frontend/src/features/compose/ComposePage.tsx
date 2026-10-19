@@ -1,5 +1,4 @@
 import type { Editor } from '@tiptap/react';
-import { ArrowLeft, ChevronDown, Clock, Paperclip } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
@@ -27,8 +26,10 @@ function FieldRow({
   className?: string;
 }) {
   return (
-    <div className={cn('flex min-h-9 items-center gap-2', className)}>
-      <span className="w-14 shrink-0 text-xs text-gray-600">{label}</span>
+    <div className={cn('flex min-h-[46px] items-center gap-space-sm border-b border-outline-variant/30 py-2', className)}>
+      <span className="w-16 shrink-0 font-label-md text-label-md text-on-surface-variant font-medium">
+        {label}
+      </span>
       <div className="flex min-w-0 flex-1 items-center">{children}</div>
     </div>
   );
@@ -57,14 +58,14 @@ export function ComposePage() {
     const delay = delaySeconds === '' ? 0 : Number(delaySeconds);
     const limit = Number(hourlyLimit);
 
-    if (!sender) return toast.error('Pick a sender first');
-    if (recipients.length === 0) return toast.error('Add at least one recipient');
-    if (!subject.trim()) return toast.error('Subject is required');
-    if (bodyIsEmpty) return toast.error('Write something in the body');
+    if (!sender) return toast.error('Pick a verified sender identity first');
+    if (recipients.length === 0) return toast.error('Add at least one recipient address');
+    if (!subject.trim()) return toast.error('Subject line is required');
+    if (bodyIsEmpty) return toast.error('Write your dispatch content in the body');
     if (!Number.isFinite(delay) || delay < 0)
       return toast.error('Delay must be zero or more seconds');
     if (!Number.isInteger(limit) || limit < 1)
-      return toast.error('Hourly limit must be at least 1');
+      return toast.error('Hourly rate limit must be at least 1 message/hour');
     if (!sendAt) {
       setPickerOpen(true);
       return;
@@ -83,11 +84,11 @@ export function ComposePage() {
       {
         onSuccess: async (result) => {
           toast.success(
-            `Scheduled ${result.total} ${result.total === 1 ? 'email' : 'emails'}, first at ${formatSendTime(new Date(result.firstAt))}`,
+            `Scheduled ${result.total} ${result.total === 1 ? 'dispatch' : 'dispatches'}, first queued for ${formatSendTime(new Date(result.firstAt))}`,
           );
           if (!result.queued) {
             toast.warning(
-              'Saved, but the queue is unreachable. The worker will pick these up when Redis is back.',
+              'Saved, but the background worker queue is offline. It will pick these up automatically upon restart.',
             );
           }
           await navigate('/scheduled');
@@ -98,7 +99,7 @@ export function ComposePage() {
               ? (error.details as { message: string }[]).map((d) => d.message).join(', ')
               : null;
           toast.error(
-            detail || (error instanceof Error ? error.message : 'Could not schedule the campaign'),
+            detail || (error instanceof Error ? error.message : 'Could not queue the dispatch campaign'),
           );
         },
       },
@@ -106,136 +107,184 @@ export function ComposePage() {
   };
 
   return (
-    <div className="flex h-full flex-col bg-white">
-      <header className="flex h-14 shrink-0 items-center gap-2 px-4">
-        <IconButton label="Back" onClick={() => void navigate(-1)}>
-          <ArrowLeft className="size-[18px]" />
-        </IconButton>
-        <h1 className="flex-1 text-lg font-medium text-gray-900">Compose New Email</h1>
-
-        <IconButton label="Attachments are not supported yet" disabled>
-          <Paperclip className="size-4" />
-        </IconButton>
-
-        <SendLaterPopover
-          open={pickerOpen}
-          onClose={() => setPickerOpen(false)}
-          value={sendAt}
-          onChange={setSendAt}
-          trigger={
-            <span className="flex items-center gap-1">
-              {sendAt && <span className="text-xs text-gray-500">{formatSendTime(sendAt)}</span>}
-              <IconButton
-                label="Choose send time"
-                active={Boolean(sendAt)}
-                onClick={() => setPickerOpen((v) => !v)}
-              >
-                <Clock className="size-4" />
-              </IconButton>
+    <div className="flex flex-col w-full min-h-screen">
+      {/* Top Fixed Header */}
+      <header className="fixed top-0 left-[260px] right-0 h-[60px] bg-surface-container-lowest border-b border-outline-variant/40 z-40 px-space-lg flex items-center justify-between">
+        <div className="flex items-center gap-space-sm">
+          <IconButton label="Back" size="md" onClick={() => void navigate(-1)}>
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          </IconButton>
+          <div className="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant">
+            <span className="text-on-surface font-headline-sm text-headline-sm">
+              Compose Dispatch
             </span>
-          }
-        />
+            <span className="text-outline-variant">/</span>
+            <span className="text-on-surface-variant font-medium">New Batch or Note</span>
+          </div>
+        </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="ml-1"
-          loading={create.isPending}
-          onClick={submit}
-        >
-          {sendAt ? 'Send' : 'Send Later'}
-        </Button>
+        <div className="flex items-center gap-space-sm">
+          {/* Send Later Picker Trigger */}
+          <SendLaterPopover
+            open={pickerOpen}
+            onClose={() => setPickerOpen(false)}
+            value={sendAt}
+            onChange={setSendAt}
+            trigger={
+              <button
+                type="button"
+                onClick={() => setPickerOpen((v) => !v)}
+                className={`h-9 px-3 rounded-lg border font-label-md text-label-md flex items-center gap-1.5 transition-colors cursor-pointer ${
+                  sendAt
+                    ? 'bg-secondary-container/40 text-on-secondary-container border-secondary-fixed-dim'
+                    : 'bg-surface-container-lowest border-outline-variant/60 text-on-surface hover:border-primary'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  {sendAt ? 'schedule_send' : 'schedule'}
+                </span>
+                <span>{sendAt ? formatSendTime(sendAt) : 'Schedule Horizon'}</span>
+              </button>
+            }
+          />
+
+          <Button
+            variant="primary"
+            size="md"
+            loading={create.isPending}
+            onClick={submit}
+            leftIcon={
+              <span className="material-symbols-outlined text-[18px]">
+                {sendAt ? 'send' : 'schedule_send'}
+              </span>
+            }
+          >
+            {sendAt ? 'Queue Dispatch' : 'Schedule Dispatch'}
+          </Button>
+        </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-10">
-        <div className="mx-auto max-w-3xl">
-          <FieldRow label="From">
-            <Popover
-              open={senderOpen}
-              onClose={() => setSenderOpen(false)}
-              align="left"
-              panelClassName="min-w-[260px] py-1"
-              trigger={
-                <button
-                  type="button"
-                  onClick={() => setSenderOpen((v) => !v)}
-                  aria-haspopup="listbox"
-                  aria-expanded={senderOpen}
-                  disabled={senders.isPending}
-                  className="inline-flex h-7 items-center gap-1.5 rounded-md bg-gray-100 px-2.5 text-[13px] text-gray-800 hover:bg-gray-200 disabled:opacity-60"
-                >
-                  {senders.isPending
-                    ? 'Loading senders…'
-                    : (sender?.email ?? 'No sender available')}
-                  <ChevronDown className="size-3.5 text-gray-500" />
-                </button>
-              }
-            >
-              <div role="listbox">
-                {(senders.data ?? []).map((s) => (
-                  <MenuItem
-                    key={s.id}
-                    selected={s.id === sender?.id}
-                    onClick={() => {
-                      setSenderId(s.id);
-                      setSenderOpen(false);
-                    }}
+      {/* Main Form Content */}
+      <main className="w-full pt-[60px] bg-surface flex-1 p-space-lg">
+        <div className="max-w-4xl mx-auto flex flex-col gap-space-lg pb-space-2xl">
+          <div className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-space-xl shadow-xs flex flex-col gap-space-sm">
+            {/* From Sender Selector */}
+            <FieldRow label="From">
+              <Popover
+                open={senderOpen}
+                onClose={() => setSenderOpen(false)}
+                align="left"
+                panelClassName="w-[280px] p-1.5"
+                trigger={
+                  <button
+                    type="button"
+                    onClick={() => setSenderOpen((v) => !v)}
+                    aria-haspopup="listbox"
+                    aria-expanded={senderOpen}
+                    disabled={senders.isPending}
+                    className="inline-flex h-8 items-center gap-2 rounded-lg bg-surface-container-low border border-outline-variant/50 px-3 font-body-sm text-body-sm text-on-surface hover:bg-surface-container transition-colors disabled:opacity-50 cursor-pointer"
                   >
-                    {s.email}
-                  </MenuItem>
-                ))}
+                    <span className="material-symbols-outlined text-[16px] text-secondary">
+                      verified_user
+                    </span>
+                    <span className="truncate max-w-[200px]">
+                      {senders.isPending
+                        ? 'Loading identities…'
+                        : (sender?.email ?? 'No sender available')}
+                    </span>
+                    <span className="material-symbols-outlined text-[16px] text-on-surface-variant">
+                      expand_more
+                    </span>
+                  </button>
+                }
+              >
+                <div role="listbox" className="flex flex-col gap-0.5">
+                  <div className="px-2.5 py-1 text-[11px] font-mono-metric uppercase tracking-wider text-on-surface-variant font-semibold">
+                    Select Sender Node
+                  </div>
+                  {(senders.data ?? []).map((s) => (
+                    <MenuItem
+                      key={s.id}
+                      selected={s.id === sender?.id}
+                      onClick={() => {
+                        setSenderId(s.id);
+                        setSenderOpen(false);
+                      }}
+                    >
+                      {s.email} {s.name ? `(${s.name})` : ''}
+                    </MenuItem>
+                  ))}
+                </div>
+              </Popover>
+            </FieldRow>
+
+            {/* Recipients Row */}
+            <RecipientsField recipients={recipients} onChange={setRecipients} />
+
+            {/* Subject Row */}
+            <FieldRow label="Subject">
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Enter dispatch subject line..."
+                maxLength={500}
+                className="h-9 w-full bg-transparent font-body-base text-body-base text-on-surface outline-none placeholder:text-on-surface-variant/60"
+              />
+            </FieldRow>
+
+            {/* Delivery Throttling Ergonomics Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-space-md py-3 px-space-md bg-surface-container-low/60 rounded-xl border border-outline-variant/30 text-body-sm text-on-surface-variant my-1">
+              <div className="flex flex-wrap items-center gap-space-lg">
+                <label className="flex items-center gap-2 cursor-pointer font-label-md">
+                  <span>Throttle delay between sends:</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    inputMode="numeric"
+                    value={delaySeconds}
+                    onChange={(e) => setDelaySeconds(e.target.value)}
+                    placeholder="0"
+                    aria-label="Delay between two emails in seconds"
+                    className="h-8 w-14 rounded-lg border border-outline-variant/60 bg-surface-container-lowest text-center font-mono-metric text-body-sm text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  />
+                  <span className="font-mono-metric text-label-sm text-on-surface-variant">sec</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer font-label-md">
+                  <span>Hourly send limit:</span>
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    inputMode="numeric"
+                    value={hourlyLimit}
+                    onChange={(e) => setHourlyLimit(e.target.value)}
+                    placeholder="45"
+                    aria-label="Maximum emails per hour"
+                    className="h-8 w-16 rounded-lg border border-outline-variant/60 bg-surface-container-lowest text-center font-mono-metric text-body-sm text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  />
+                  <span className="font-mono-metric text-label-sm text-on-surface-variant">msg/hr</span>
+                </label>
               </div>
-            </Popover>
-          </FieldRow>
 
-          <RecipientsField recipients={recipients} onChange={setRecipients} />
+              <div className="flex items-center gap-1.5 font-mono-metric text-[11px] text-secondary">
+                <span className="material-symbols-outlined text-[16px]">speed</span>
+                <span>Anti-Spam Warmup Guard Active</span>
+              </div>
+            </div>
 
-          <FieldRow label="Subject" className="border-b border-gray-100">
-            <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="Subject"
-              maxLength={500}
-              className="h-9 w-full bg-transparent text-[13px] text-gray-900 outline-none placeholder:text-gray-400"
-            />
-          </FieldRow>
-
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2.5 text-xs text-gray-600">
-            <label className="flex items-center gap-2">
-              Delay between 2 emails
-              <input
-                type="number"
-                min={0}
-                step={1}
-                inputMode="numeric"
-                value={delaySeconds}
-                onChange={(e) => setDelaySeconds(e.target.value)}
-                placeholder="00"
-                aria-label="Delay between two emails, in seconds"
-                className="h-7 w-12 rounded border border-gray-200 text-center text-[13px] text-gray-900 outline-none placeholder:text-gray-300 focus:border-brand"
-              />
-              <span className="text-gray-400">sec</span>
-            </label>
-            <label className="flex items-center gap-2">
-              Hourly Limit
-              <input
-                type="number"
-                min={1}
-                step={1}
-                inputMode="numeric"
-                value={hourlyLimit}
-                onChange={(e) => setHourlyLimit(e.target.value)}
-                placeholder="00"
-                aria-label="Maximum emails per hour"
-                className="h-7 w-12 rounded border border-gray-200 text-center text-[13px] text-gray-900 outline-none placeholder:text-gray-300 focus:border-brand"
-              />
-            </label>
+            {/* Tiptap Rich Text Content Body */}
+            <div className="pt-2">
+              <span className="font-label-md text-label-md text-on-surface-variant font-medium block mb-1">
+                Dispatch Body
+              </span>
+              <BodyEditor onEditor={setEditor} />
+            </div>
           </div>
-
-          <BodyEditor onEditor={setEditor} />
         </div>
-      </div>
+      </main>
     </div>
   );
 }

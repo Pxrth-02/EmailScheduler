@@ -1,46 +1,116 @@
-import { Clock } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cn } from '../../lib/cn.ts';
 import type { EmailStatus } from '../../types/api.ts';
 
-interface BadgeProps {
-  tone: 'scheduled' | 'sent' | 'failed' | 'sending';
+export type BadgeTone =
+  | 'scheduled'
+  | 'queued'
+  | 'sent'
+  | 'failed'
+  | 'sending'
+  | 'paused'
+  | 'neutral'
+  | 'horizon';
+
+export interface BadgeProps {
+  tone: BadgeTone;
   children: ReactNode;
   className?: string;
+  dot?: boolean;
+  pulse?: boolean;
 }
 
-const tones: Record<BadgeProps['tone'], string> = {
-  scheduled: 'bg-badge-scheduled text-badge-scheduled-text',
-  sent: 'bg-badge-sent text-badge-sent-text',
-  failed: 'bg-red-50 text-red-600',
-  sending: 'bg-blue-50 text-blue-600',
+const tones: Record<BadgeTone, string> = {
+  scheduled:
+    'bg-surface-container-high text-on-surface-variant border border-outline-variant/30',
+  queued:
+    'bg-surface-container-high text-on-surface-variant border border-outline-variant/30',
+  sent:
+    'bg-secondary-container/40 text-on-secondary-container border border-secondary-fixed-dim/30',
+  failed:
+    'bg-error-container/60 text-error border border-error-container',
+  sending:
+    'bg-secondary-container/30 text-secondary border border-secondary-fixed-dim/30',
+  paused:
+    'bg-tertiary-container/30 text-tertiary border border-tertiary-fixed-dim/30',
+  neutral:
+    'bg-surface-container text-on-surface-variant border border-outline-variant/30',
+  horizon:
+    'bg-secondary-fixed text-on-secondary-fixed font-medium',
 };
 
-export function Badge({ tone, children, className }: BadgeProps) {
+export function Badge({
+  tone,
+  children,
+  className,
+  dot = false,
+  pulse = false,
+}: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex h-5 shrink-0 items-center gap-1 rounded px-1.5 text-[11px] font-medium whitespace-nowrap',
+        'inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 font-label-sm text-label-sm font-medium whitespace-nowrap select-none',
         tones[tone],
         className,
       )}
     >
-      {tone === 'scheduled' && <Clock className="size-3" strokeWidth={2.2} />}
+      {dot && (
+        <span
+          className={cn(
+            'w-1.5 h-1.5 rounded-full',
+            tone === 'sending' && 'bg-primary animate-ping',
+            tone === 'queued' && 'bg-on-surface-variant',
+            tone === 'scheduled' && 'bg-primary',
+            tone === 'sent' && 'bg-primary',
+            tone === 'failed' && 'bg-error',
+            tone === 'paused' && 'bg-tertiary',
+            pulse && 'animate-pulse',
+          )}
+        />
+      )}
       {children}
     </span>
   );
 }
 
-/** Badge text for an email in either tab. */
-export function StatusBadge({ status, time }: { status: EmailStatus; time?: string }) {
+/** Badge for an email in either tab */
+export function StatusBadge({
+  status,
+  time,
+}: {
+  status: EmailStatus | 'paused';
+  time?: string;
+}) {
   switch (status) {
     case 'scheduled':
-      return <Badge tone="scheduled">{time ?? 'Scheduled'}</Badge>;
+      return (
+        <Badge tone="queued" dot={Boolean(time)}>
+          {time ? `Queued (${time})` : 'Queued'}
+        </Badge>
+      );
     case 'sending':
-      return <Badge tone="sending">Sending</Badge>;
+      return (
+        <Badge tone="sending" dot>
+          Sending
+        </Badge>
+      );
     case 'sent':
-      return <Badge tone="sent">Sent</Badge>;
+      return (
+        <Badge tone="sent" dot>
+          Sent
+        </Badge>
+      );
     case 'failed':
-      return <Badge tone="failed">Failed</Badge>;
+      return (
+        <Badge tone="failed" dot>
+          Failed
+        </Badge>
+      );
+    case 'paused':
+      return (
+        <Badge tone="paused" dot>
+          Paused
+        </Badge>
+      );
   }
 }

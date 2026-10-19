@@ -2,22 +2,6 @@ import { Placeholder } from '@tiptap/extensions';
 import TextAlign from '@tiptap/extension-text-align';
 import { EditorContent, useEditor, useEditorState, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import {
-  AlignCenter,
-  AlignLeft,
-  AlignRight,
-  Bold,
-  IndentDecrease,
-  IndentIncrease,
-  Italic,
-  List,
-  ListOrdered,
-  Quote,
-  Redo2,
-  Strikethrough,
-  Underline,
-  Undo2,
-} from 'lucide-react';
 import { useEffect, type ReactNode } from 'react';
 import { cn } from '../../lib/cn.ts';
 
@@ -45,11 +29,12 @@ function ToolbarButton({
       aria-label={label}
       aria-pressed={active}
       disabled={disabled}
-      onMouseDown={(e) => e.preventDefault()} // keep the editor selection
+      onMouseDown={(e) => e.preventDefault()} // keep editor selection
       onClick={onClick}
       className={cn(
-        'flex size-7 items-center justify-center rounded text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent',
-        active && 'bg-brand-soft text-gray-900',
+        'flex size-8 items-center justify-center rounded-lg font-medium transition-colors select-none cursor-pointer',
+        'text-on-surface-variant hover:text-on-surface hover:bg-surface-container disabled:opacity-40 disabled:hover:bg-transparent',
+        active && 'bg-primary-container text-on-primary-container hover:bg-primary-container shadow-xs',
       )}
     >
       {children}
@@ -58,24 +43,22 @@ function ToolbarButton({
 }
 
 function Divider() {
-  return <span className="mx-1 h-4 w-px bg-gray-200" aria-hidden="true" />;
+  return <span className="mx-1 h-4 w-px bg-outline-variant/40" aria-hidden="true" />;
 }
 
 const headingOptions = [
-  { label: 'Normal', level: 0 },
+  { label: 'Normal Text', level: 0 },
   { label: 'Heading 1', level: 1 },
   { label: 'Heading 2', level: 2 },
   { label: 'Heading 3', level: 3 },
 ] as const;
 
 function Toolbar({ editor }: { editor: Editor }) {
-  // Subscribes to the bits of editor state the toolbar renders, and nothing else.
   const state = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
       bold: e.isActive('bold'),
       italic: e.isActive('italic'),
-      underline: e.isActive('underline'),
       strike: e.isActive('strike'),
       bullet: e.isActive('bulletList'),
       ordered: e.isActive('orderedList'),
@@ -97,17 +80,27 @@ function Toolbar({ editor }: { editor: Editor }) {
     <div
       role="toolbar"
       aria-label="Formatting"
-      className="flex flex-wrap items-center gap-0.5 rounded-md bg-white px-2 py-1 shadow-sm ring-1 ring-gray-100"
+      className="flex flex-wrap items-center gap-1 rounded-xl bg-surface-container-low border border-outline-variant/40 p-1.5 shadow-xs"
     >
-      <ToolbarButton label="Undo" disabled={!state.canUndo} onClick={() => chain().undo().run()}>
-        <Undo2 className="size-4" />
+      <ToolbarButton
+        label="Undo"
+        disabled={!state.canUndo}
+        onClick={() => chain().undo().run()}
+      >
+        <span className="material-symbols-outlined text-[18px]">undo</span>
       </ToolbarButton>
-      <ToolbarButton label="Redo" disabled={!state.canRedo} onClick={() => chain().redo().run()}>
-        <Redo2 className="size-4" />
+      <ToolbarButton
+        label="Redo"
+        disabled={!state.canRedo}
+        onClick={() => chain().redo().run()}
+      >
+        <span className="material-symbols-outlined text-[18px]">redo</span>
       </ToolbarButton>
+
       <Divider />
+
       <select
-        aria-label="Text style"
+        aria-label="Text hierarchy"
         value={state.heading}
         onMouseDown={(e) => e.stopPropagation()}
         onChange={(e) => {
@@ -115,7 +108,7 @@ function Toolbar({ editor }: { editor: Editor }) {
           if (level === 0) chain().setParagraph().run();
           else chain().toggleHeading({ level }).run();
         }}
-        className="h-7 rounded bg-transparent px-1 text-xs text-gray-600 outline-none hover:bg-gray-100"
+        className="h-8 rounded-lg bg-surface-container-lowest border border-outline-variant/40 px-2 font-body-sm text-body-sm text-on-surface outline-none hover:border-primary/60 transition-colors"
       >
         {headingOptions.map((option) => (
           <option key={option.level} value={option.level}>
@@ -123,106 +116,107 @@ function Toolbar({ editor }: { editor: Editor }) {
           </option>
         ))}
       </select>
+
       <Divider />
-      <ToolbarButton label="Bold" active={state.bold} onClick={() => chain().toggleBold().run()}>
-        <Bold className="size-4" />
+
+      <ToolbarButton
+        label="Bold"
+        active={state.bold}
+        onClick={() => chain().toggleBold().run()}
+      >
+        <span className="material-symbols-outlined text-[18px]">format_bold</span>
       </ToolbarButton>
       <ToolbarButton
         label="Italic"
         active={state.italic}
         onClick={() => chain().toggleItalic().run()}
       >
-        <Italic className="size-4" />
+        <span className="material-symbols-outlined text-[18px]">format_italic</span>
       </ToolbarButton>
       <ToolbarButton
-        label="Underline"
-        active={state.underline}
-        onClick={() => chain().toggleUnderline().run()}
+        label="Strikethrough"
+        active={state.strike}
+        onClick={() => chain().toggleStrike().run()}
       >
-        <Underline className="size-4" />
+        <span className="material-symbols-outlined text-[18px]">format_strikethrough</span>
       </ToolbarButton>
+
       <Divider />
+
       <ToolbarButton
         label="Align left"
         active={state.left}
         onClick={() => chain().setTextAlign('left').run()}
       >
-        <AlignLeft className="size-4" />
+        <span className="material-symbols-outlined text-[18px]">format_align_left</span>
       </ToolbarButton>
       <ToolbarButton
         label="Align center"
         active={state.center}
         onClick={() => chain().setTextAlign('center').run()}
       >
-        <AlignCenter className="size-4" />
+        <span className="material-symbols-outlined text-[18px]">format_align_center</span>
       </ToolbarButton>
       <ToolbarButton
         label="Align right"
         active={state.right}
         onClick={() => chain().setTextAlign('right').run()}
       >
-        <AlignRight className="size-4" />
+        <span className="material-symbols-outlined text-[18px]">format_align_right</span>
       </ToolbarButton>
+
       <Divider />
+
       <ToolbarButton
         label="Numbered list"
         active={state.ordered}
         onClick={() => chain().toggleOrderedList().run()}
       >
-        <ListOrdered className="size-4" />
+        <span className="material-symbols-outlined text-[18px]">format_list_numbered</span>
       </ToolbarButton>
       <ToolbarButton
         label="Bulleted list"
         active={state.bullet}
         onClick={() => chain().toggleBulletList().run()}
       >
-        <List className="size-4" />
+        <span className="material-symbols-outlined text-[18px]">format_list_bulleted</span>
       </ToolbarButton>
       <ToolbarButton
         label="Indent"
         disabled={!state.canSink}
         onClick={() => chain().sinkListItem('listItem').run()}
       >
-        <IndentIncrease className="size-4" />
+        <span className="material-symbols-outlined text-[18px]">format_indent_increase</span>
       </ToolbarButton>
       <ToolbarButton
         label="Outdent"
         disabled={!state.canLift}
         onClick={() => chain().liftListItem('listItem').run()}
       >
-        <IndentDecrease className="size-4" />
+        <span className="material-symbols-outlined text-[18px]">format_indent_decrease</span>
       </ToolbarButton>
       <ToolbarButton
-        label="Quote"
+        label="Blockquote"
         active={state.quote}
         onClick={() => chain().toggleBlockquote().run()}
       >
-        <Quote className="size-4" />
-      </ToolbarButton>
-      <Divider />
-      <ToolbarButton
-        label="Strikethrough"
-        active={state.strike}
-        onClick={() => chain().toggleStrike().run()}
-      >
-        <Strikethrough className="size-4" />
+        <span className="material-symbols-outlined text-[18px]">format_quote</span>
       </ToolbarButton>
     </div>
   );
 }
 
-/** Rich-text body with the toolbar from the design. The parent reads HTML through `onEditor`. */
 export function BodyEditor({ onEditor }: BodyEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] }, link: { openOnClick: false } }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      Placeholder.configure({ placeholder: 'Type Your Reply...' }),
+      Placeholder.configure({ placeholder: 'Draft your outreach message or notification here...' }),
     ],
     editorProps: {
       attributes: {
         class:
-          'prose-email min-h-[260px] px-1 py-3 text-[13px] leading-6 text-gray-800 outline-none',
+          'prose-email min-h-[300px] p-space-md font-body-base text-body-base text-on-surface outline-none leading-relaxed',
         'aria-label': 'Email body',
       },
     },
@@ -234,9 +228,11 @@ export function BodyEditor({ onEditor }: BodyEditorProps) {
   }, [editor, onEditor]);
 
   return (
-    <div className="rounded-lg bg-canvas px-3 pt-3 pb-2">
+    <div className="flex flex-col gap-2 mt-2">
       {editor && <Toolbar editor={editor} />}
-      <EditorContent editor={editor} />
+      <div className="rounded-xl border border-outline-variant/40 bg-surface-container-lowest shadow-xs focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+        <EditorContent editor={editor} />
+      </div>
     </div>
   );
 }

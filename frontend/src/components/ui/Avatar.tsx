@@ -1,15 +1,18 @@
 import { cn } from '../../lib/cn.ts';
 
-interface AvatarProps {
+export interface AvatarProps {
   name: string;
   src?: string | null;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
 
-const sizes = { sm: 'size-7 text-[11px]', md: 'size-8 text-xs', lg: 'size-10 text-sm' };
+const sizes = {
+  sm: 'size-7 text-[12px]',
+  md: 'size-8 text-[13px]',
+  lg: 'size-10 text-[15px]',
+};
 
-/** Photo when we have one, otherwise the first letter on the brand green like the design's sender bubble. */
 export function Avatar({ name, src, size = 'md', className }: AvatarProps) {
   const initial = name.trim().charAt(0).toUpperCase() || '?';
 
@@ -19,7 +22,7 @@ export function Avatar({ name, src, size = 'md', className }: AvatarProps) {
         src={src}
         alt={name}
         referrerPolicy="no-referrer"
-        className={cn('shrink-0 rounded-full object-cover', sizes[size], className)}
+        className={cn('shrink-0 rounded-full object-cover ring-1 ring-outline-variant/40', sizes[size], className)}
       />
     );
   }
@@ -28,7 +31,7 @@ export function Avatar({ name, src, size = 'md', className }: AvatarProps) {
     <span
       aria-hidden="true"
       className={cn(
-        'inline-flex shrink-0 items-center justify-center rounded-full bg-brand font-semibold text-white',
+        'inline-flex shrink-0 items-center justify-center rounded-full bg-primary-container font-semibold text-on-primary-container select-none',
         sizes[size],
         className,
       )}

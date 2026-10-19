@@ -1,11 +1,10 @@
 import { addDays, setHours, setMinutes, startOfDay } from 'date-fns';
-import { Calendar } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { Button } from '../../components/ui/Button.tsx';
 import { Popover } from '../../components/ui/Popover.tsx';
 import { toDateTimeLocal } from '../../lib/format.ts';
 
-interface SendLaterPopoverProps {
+export interface SendLaterPopoverProps {
   open: boolean;
   onClose: () => void;
   value: Date | null;
@@ -18,14 +17,13 @@ function tomorrowAt(hour: number): Date {
 }
 
 const presets: { label: string; at: () => Date }[] = [
-  { label: 'Now', at: () => new Date() },
-  { label: 'Tomorrow', at: () => tomorrowAt(9) },
-  { label: 'Tomorrow, 10:00 AM', at: () => tomorrowAt(10) },
-  { label: 'Tomorrow, 11:00 AM', at: () => tomorrowAt(11) },
-  { label: 'Tomorrow, 3:00 PM', at: () => tomorrowAt(15) },
+  { label: 'Immediate (Now)', at: () => new Date() },
+  { label: 'Tomorrow Morning (9:00 AM)', at: () => tomorrowAt(9) },
+  { label: 'Tomorrow Mid-day (12:00 PM)', at: () => tomorrowAt(12) },
+  { label: 'Tomorrow Afternoon (3:00 PM)', at: () => tomorrowAt(15) },
+  { label: 'Tomorrow Evening (6:00 PM)', at: () => tomorrowAt(18) },
 ];
 
-/** The "Send Later" panel: a date-time picker, quick presets, Cancel / Done. */
 export function SendLaterPopover({
   open,
   onClose,
@@ -47,62 +45,62 @@ export function SendLaterPopover({
   };
 
   return (
-    <Popover open={open} onClose={onClose} trigger={trigger} panelClassName="w-[215px] p-3">
-      <p className="mb-2 text-[13px] font-medium text-gray-900">Send Later</p>
+    <Popover open={open} onClose={onClose} trigger={trigger} panelClassName="w-[280px] p-space-md">
+      <div className="flex items-center justify-between pb-space-xs border-b border-outline-variant/30 mb-space-sm">
+        <span className="font-headline-sm text-headline-sm text-on-surface">Schedule Send</span>
+        <span className="font-mono-metric text-[11px] text-secondary bg-secondary-container/30 px-1.5 py-0.5 rounded font-medium">
+          UTC+05:30
+        </span>
+      </div>
 
-      {/* Native pickers cannot show a text placeholder, so one is painted over the empty input. */}
-      <label className="relative mb-2 flex h-8 items-center border-b border-gray-100">
-        {!picked && (
-          <span className="pointer-events-none absolute left-0 text-xs text-gray-400">
-            Pick date &amp; time
+      {/* Date & Time Input */}
+      <div className="mb-space-sm">
+        <label className="relative flex h-9 items-center rounded-lg bg-surface-container-low border border-outline-variant/60 px-2.5">
+          <input
+            type="datetime-local"
+            value={picked}
+            min={toDateTimeLocal(new Date())}
+            onClick={(e) => e.currentTarget.showPicker?.()}
+            onChange={(e) => {
+              setPicked(e.target.value);
+              if (e.target.value) setDraft(new Date(e.target.value));
+            }}
+            aria-label="Pick date and time"
+            className="h-full w-full cursor-pointer bg-transparent pr-6 font-mono-metric text-body-sm text-on-surface outline-none [&::-webkit-calendar-picker-indicator]:opacity-0"
+          />
+          <span className="material-symbols-outlined pointer-events-none absolute right-2.5 text-[18px] text-on-surface-variant">
+            calendar_today
           </span>
-        )}
-        <input
-          type="datetime-local"
-          value={picked}
-          min={toDateTimeLocal(new Date())}
-          onClick={(e) => e.currentTarget.showPicker?.()}
-          onChange={(e) => {
-            setPicked(e.target.value);
-            if (e.target.value) setDraft(new Date(e.target.value));
-          }}
-          aria-label="Pick date and time"
-          className="h-full w-full cursor-pointer bg-transparent pr-6 text-xs text-gray-900 outline-none [&::-webkit-calendar-picker-indicator]:hidden"
-          style={picked ? undefined : { color: 'transparent' }}
-        />
-        <Calendar className="pointer-events-none absolute right-0 size-3.5 text-gray-400" />
-      </label>
+        </label>
+      </div>
 
-      <ul className="mb-3 space-y-0.5">
+      <p className="font-mono-metric text-[11px] uppercase tracking-wider text-on-surface-variant font-semibold mb-1">
+        Quick Presets
+      </p>
+
+      <ul className="mb-space-md space-y-1">
         {presets.map((preset) => (
           <li key={preset.label}>
             <button
               type="button"
               onClick={() => choose(preset.at())}
-              className="w-full rounded px-1 py-1 text-left text-xs text-gray-700 hover:bg-gray-50"
+              className="w-full flex items-center justify-between rounded-lg px-2.5 py-1.5 text-left font-body-sm text-body-sm text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
             >
-              {preset.label}
+              <span>{preset.label}</span>
+              <span className="material-symbols-outlined text-[14px] text-on-surface-variant">
+                arrow_forward
+              </span>
             </button>
           </li>
         ))}
       </ul>
 
-      <div className="flex items-center justify-end gap-3">
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-xs text-gray-600 hover:text-gray-900"
-        >
+      <div className="flex items-center justify-end gap-2 pt-space-xs border-t border-outline-variant/30">
+        <Button variant="ghost" size="sm" onClick={onClose}>
           Cancel
-        </button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-7 px-4 text-xs"
-          onClick={done}
-          disabled={!draft}
-        >
-          Done
+        </Button>
+        <Button variant="primary" size="sm" onClick={done} disabled={!draft}>
+          Confirm Send Time
         </Button>
       </div>
     </Popover>

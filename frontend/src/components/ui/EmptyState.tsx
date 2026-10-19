@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-interface EmptyStateProps {
+export interface EmptyStateProps {
   icon: ReactNode;
   title: string;
   description?: string;
@@ -9,13 +9,17 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
-      <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-brand-soft text-brand">
+    <div className="flex flex-col items-center justify-center px-6 py-16 text-center select-none">
+      <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-secondary-container/40 text-primary border border-secondary-fixed-dim/40 shadow-xs">
         {icon}
       </div>
-      <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
-      {description && <p className="mt-1 max-w-xs text-[13px] text-gray-500">{description}</p>}
-      {action && <div className="mt-5">{action}</div>}
+      <h2 className="font-headline-sm text-headline-sm text-on-surface">{title}</h2>
+      {description && (
+        <p className="mt-1.5 max-w-sm font-body-sm text-body-sm text-on-surface-variant">
+          {description}
+        </p>
+      )}
+      {action && <div className="mt-6">{action}</div>}
     </div>
   );
 }

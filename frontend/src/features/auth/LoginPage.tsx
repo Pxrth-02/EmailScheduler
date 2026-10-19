@@ -19,7 +19,7 @@ export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // The backend sends the browser back here with ?error=google when the OAuth dance fails.
+  // Handle OAuth failure redirect
   useEffect(() => {
     if (params.get('error') === 'google') {
       toast.error('Google sign-in did not complete. Please try again.');
@@ -51,70 +51,119 @@ export function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-full items-center justify-center bg-white px-4 py-12">
-      <div className="w-full max-w-[505px] rounded-xl border border-gray-200 bg-white px-14 py-14">
-        <h1 className="mb-9 text-center text-[34px] font-bold tracking-tight text-gray-900">
-          Login
-        </h1>
+    <main className="flex min-h-screen items-center justify-center bg-surface p-space-md select-none">
+      <div className="w-full max-w-[460px] rounded-2xl bg-surface-container-lowest border border-outline-variant/40 shadow-xl p-space-xl flex flex-col">
+        {/* Brand Header */}
+        <div className="flex flex-col items-center justify-center gap-space-xs text-center mb-space-md">
+          <div className="flex items-center gap-2">
+            <div className="grid grid-cols-3 gap-[2.5px] p-1.5 rounded-lg bg-surface-container border border-outline-variant/60">
+              <div className="w-1.5 h-1.5 bg-primary rounded-[0.5px]"></div>
+              <div className="w-1.5 h-1.5 bg-primary rounded-[0.5px]"></div>
+              <div className="w-1.5 h-1.5 bg-transparent"></div>
+              <div className="w-1.5 h-1.5 bg-primary rounded-[0.5px]"></div>
+              <div className="w-1.5 h-1.5 bg-primary rounded-[0.5px]"></div>
+              <div className="w-1.5 h-1.5 bg-primary rounded-[0.5px]"></div>
+              <div className="w-1.5 h-1.5 bg-primary rounded-[0.5px]"></div>
+              <div className="w-1.5 h-1.5 bg-transparent"></div>
+              <div className="w-1.5 h-1.5 bg-primary rounded-[0.5px]"></div>
+            </div>
+            <span className="font-headline-sm text-headline-sm tracking-tight text-on-surface">
+              ONB
+            </span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-mono-metric bg-secondary-fixed text-on-secondary-fixed border border-secondary-fixed-dim/40 font-semibold">
+              v2.4
+            </span>
+          </div>
 
+          <h1 className="font-headline-xl text-headline-xl text-on-surface tracking-tight mt-2">
+            {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+          </h1>
+          <p className="font-body-base text-body-base text-on-surface-variant max-w-xs">
+            {mode === 'login'
+              ? 'Access your bulk outreach pipeline and scheduled email queues.'
+              : 'Start orchestrating high-throughput outreach dispatches.'}
+          </p>
+        </div>
+
+        {/* Google OAuth Button */}
         <button
           type="button"
           onClick={startGoogleLogin}
-          className="flex h-12 w-full items-center justify-center gap-3 rounded-lg bg-brand-soft text-[15px] text-gray-900 transition-colors hover:bg-[#d8f0e1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          className="flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest font-label-md text-label-md text-on-surface transition-all hover:border-primary hover:bg-surface-container-low shadow-xs active:scale-[0.99] cursor-pointer"
         >
           <img
             src={GOOGLE_LOGO}
             alt=""
-            className="size-[18px]"
+            className="size-5 shrink-0"
             onError={(e) => (e.currentTarget.style.display = 'none')}
           />
-          Login with Google
+          <span>Continue with Google</span>
         </button>
 
-        <div className="my-6 flex items-center gap-4 text-[13px] text-gray-400">
-          <span className="h-px flex-1 bg-gray-200" />
-          or sign up through email
-          <span className="h-px flex-1 bg-gray-200" />
+        {/* Divider */}
+        <div className="my-space-md flex items-center gap-3 text-body-sm text-on-surface-variant/70">
+          <span className="h-px flex-1 bg-outline-variant/30" />
+          <span className="font-mono-metric text-[11px] uppercase tracking-wider">
+            or continue with credentials
+          </span>
+          <span className="h-px flex-1 bg-outline-variant/30" />
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4">
-          <Input
-            type="email"
-            name="email"
-            placeholder="Email ID"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <Input
-            type="password"
-            name="password"
-            placeholder="Password"
-            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-            required
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+        {/* Credentials Form */}
+        <form onSubmit={onSubmit} className="flex flex-col gap-space-sm">
+          <div className="flex flex-col gap-1">
+            <label className="font-label-sm text-label-sm text-on-surface-variant font-medium">
+              Email Address
+            </label>
+            <Input
+              type="email"
+              name="email"
+              look="filled"
+              placeholder="name@company.com"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="font-label-sm text-label-sm text-on-surface-variant font-medium">
+              Password
+            </label>
+            <Input
+              type="password"
+              name="password"
+              look="filled"
+              placeholder="••••••••••••"
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              required
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+
           <Button
             type="submit"
+            variant="primary"
             size="lg"
             loading={submit.isPending}
-            className="mt-2 w-full rounded-lg"
+            className="mt-space-sm w-full rounded-xl"
           >
-            {mode === 'login' ? 'Login' : 'Create account'}
+            {mode === 'login' ? 'Sign In to Dashboard' : 'Complete Registration'}
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-[13px] text-gray-500">
-          {mode === 'login' ? 'New here?' : 'Already have an account?'}{' '}
+        {/* Switch Mode Footer */}
+        <p className="mt-space-lg text-center font-body-sm text-body-sm text-on-surface-variant">
+          {mode === 'login' ? "Don't have an account yet?" : 'Already registered?'}{' '}
           <button
             type="button"
             onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-            className="font-medium text-brand hover:underline"
+            className="font-semibold text-primary hover:underline cursor-pointer ml-1"
           >
-            {mode === 'login' ? 'Sign up with email' : 'Log in'}
+            {mode === 'login' ? 'Create one now' : 'Sign in instead'}
           </button>
         </p>
       </div>

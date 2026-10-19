@@ -1,21 +1,16 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { cn } from '../../lib/cn.ts';
 
-interface PopoverProps {
+export interface PopoverProps {
   open: boolean;
   onClose: () => void;
-  /** The element that toggles the popover. Rendered in place; the panel is anchored to it. */
   trigger: ReactNode;
   children: ReactNode;
-  align?: 'left' | 'right';
+  align?: 'left' | 'right' | 'center';
   className?: string;
   panelClassName?: string;
 }
 
-/**
- * Small controlled popover: closes on outside click and Escape, positions below the trigger.
- * Enough for the send-later picker, the user menu and the filter menu without a dependency.
- */
 export function Popover({
   open,
   onClose,
@@ -31,7 +26,9 @@ export function Popover({
     if (!open) return;
 
     const onPointerDown = (event: PointerEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) onClose();
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+        onClose();
+      }
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
@@ -52,8 +49,11 @@ export function Popover({
         <div
           role="dialog"
           className={cn(
-            'absolute top-full z-30 mt-2 rounded-lg border border-gray-200 bg-white shadow-lg shadow-gray-200/60',
-            align === 'right' ? 'right-0' : 'left-0',
+            'absolute top-full z-50 mt-2 rounded-xl border border-outline-variant/40 bg-surface-container-lowest shadow-xl',
+            'transition-all duration-150 ease-out animate-in fade-in zoom-in-95',
+            align === 'right' && 'right-0',
+            align === 'left' && 'left-0',
+            align === 'center' && 'left-1/2 -translate-x-1/2',
             panelClassName,
           )}
         >

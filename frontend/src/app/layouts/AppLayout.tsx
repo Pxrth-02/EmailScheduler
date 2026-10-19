@@ -8,11 +8,13 @@ export function AppLayout() {
   if (!me.data) return null; // RequireAuth has already resolved the session above us
 
   return (
-    <div className="flex h-full min-h-0 bg-white">
+    <div className="min-h-screen bg-surface">
       <Sidebar user={me.data} />
-      <main className="flex min-w-0 flex-1 flex-col">
-        <Outlet />
-      </main>
+      <div className="pl-[260px] min-h-screen flex flex-col">
+        <main className="w-full bg-surface flex-1 flex flex-col min-h-screen">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

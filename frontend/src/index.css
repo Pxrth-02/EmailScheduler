@@ -1,22 +1,81 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/inter';
 
-/* Design tokens sampled from the Figma. The greens are Tailwind's stock green-600 family,
-   so the brand names below exist to give them meaning, not to invent new colours. */
 @theme {
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --color-background: #fcf9f5;
+  --color-secondary-fixed: #7ffc97;
+  --color-on-secondary-fixed: #002109;
+  --color-on-primary-fixed-variant: #005323;
+  --color-primary: #00652c;
+  --color-surface-bright: #fcf9f5;
+  --color-inverse-on-surface: #f3f0ec;
+  --color-surface-dim: #dcdad6;
+  --color-surface-tint: #006d30;
+  --color-on-secondary-container: #007230;
+  --color-secondary: #006e2d;
+  --color-on-error-container: #93000a;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-fixed: #ffd9dd;
+  --color-on-primary-fixed: #00210a;
+  --color-secondary-fixed-dim: #62df7d;
+  --color-outline: #6f7a6e;
+  --color-on-surface-variant: #3f493f;
+  --color-on-tertiary-container: #fff1f1;
+  --color-surface: #fcf9f5;
+  --color-surface-variant: #e5e2de;
+  --color-surface-container-lowest: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-tertiary-fixed-variant: #81233b;
+  --color-primary-container: #15803d;
+  --color-on-primary-container: #d3ffd5;
+  --color-on-background: #1c1c1a;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-surface-container-highest: #e5e2de;
+  --color-on-primary: #ffffff;
+  --color-inverse-primary: #79db8d;
+  --color-surface-container: #f1ede9;
+  --color-on-surface: #1c1c1a;
+  --color-tertiary-fixed-dim: #ffb2bd;
+  --color-surface-container-high: #ebe8e4;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-fixed-variant: #005320;
+  --color-primary-fixed-dim: #79db8d;
+  --color-tertiary-container: #b64c62;
+  --color-surface-container-low: #f6f3ef;
+  --color-on-tertiary-fixed: #400013;
+  --color-primary-fixed: #95f8a7;
+  --color-inverse-surface: #31302e;
+  --color-secondary-container: #7cf994;
+  --color-tertiary: #97344a;
+  --color-outline-variant: #becabc;
 
-  --color-brand: #00a63e;
-  --color-brand-hover: #008f36;
-  --color-brand-soft: #e5f6ec;
+  /* Aliases for backwards compatibility */
+  --color-brand: var(--color-primary);
+  --color-brand-hover: var(--color-primary-container);
+  --color-brand-soft: var(--color-on-primary-container);
+  --color-canvas: var(--color-surface);
+  --color-badge-scheduled: var(--color-secondary-container);
+  --color-badge-scheduled-text: var(--color-on-secondary-container);
+  --color-badge-sent: var(--color-surface-container-high);
+  --color-badge-sent-text: var(--color-on-surface-variant);
 
-  --color-surface: #f4f7f5;
-  --color-canvas: #fafafa;
+  /* Spacing */
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 1rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-space-xl: 2rem;
+  --spacing-space-2xl: 3rem;
+  --spacing-gutter: 1.5rem;
+  --spacing-margin: 2rem;
+  --spacing-gutter-mobile: 1rem;
+  --spacing-margin-mobile: 1rem;
 
-  --color-badge-scheduled: #ffedd4;
-  --color-badge-scheduled-text: #c2410c;
-  --color-badge-sent: #f3f4f6;
-  --color-badge-sent-text: #4b5563;
+  /* Fonts */
+  --font-mono-metric: 'Geist', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-headline: 'Hanken Grotesk', system-ui, sans-serif;
+  --font-body: 'Geist', system-ui, sans-serif;
+  --font-sans: 'Geist', system-ui, sans-serif;
 }
 
 html,
@@ -26,19 +85,135 @@ body,
 }
 
 body {
-  @apply bg-white text-gray-900 antialiased;
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
 }
 
-/* Tiptap placeholder (rendered as a pseudo-element on the empty first paragraph). */
+/* Material Symbols Outlined helper */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Stitch Font Families */
+.font-mono-metric {
+  font-family: var(--font-mono-metric);
+}
+.font-headline-sm,
+.font-headline-md,
+.font-headline-lg,
+.font-headline-xl,
+.font-headline-xl-mobile {
+  font-family: var(--font-headline);
+}
+.font-body-sm,
+.font-body-base,
+.font-body-lg,
+.font-label-sm,
+.font-label-md {
+  font-family: var(--font-body);
+}
+
+/* Stitch Font Sizes, Line Heights, Letter Spacing & Weights */
+.text-mono-metric {
+  font-size: 13px;
+  line-height: 18px;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+.text-headline-sm {
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+.text-headline-md {
+  font-size: 20px;
+  line-height: 28px;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+}
+.text-headline-lg {
+  font-size: 24px;
+  line-height: 32px;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+.text-headline-xl {
+  font-size: 36px;
+  line-height: 44px;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+.text-headline-xl-mobile {
+  font-size: 28px;
+  line-height: 36px;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+.text-label-sm {
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.01em;
+  font-weight: 500;
+}
+.text-label-md {
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: -0.005em;
+  font-weight: 500;
+}
+.text-body-sm {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+}
+.text-body-base {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+.text-body-lg {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+}
+
+/* Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Tiptap placeholder */
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
   height: 0;
   pointer-events: none;
-  color: var(--color-gray-400);
+  color: var(--color-on-surface-variant);
+  opacity: 0.6;
 }
 
-/* Minimal typography for authored email bodies, in the editor and in the reading view. */
+/* Minimal typography for authored email bodies */
 .prose-email p {
   margin: 0 0 0.75em;
 }
@@ -71,12 +246,12 @@ body {
 }
 .prose-email blockquote {
   margin: 0 0 0.75em;
-  border-left: 3px solid var(--color-gray-200);
+  border-left: 3px solid var(--color-outline-variant);
   padding-left: 0.75em;
-  color: var(--color-gray-600);
+  color: var(--color-on-surface-variant);
 }
 .prose-email a {
-  color: var(--color-brand);
+  color: var(--color-primary);
   text-decoration: underline;
 }
 .prose-email img {

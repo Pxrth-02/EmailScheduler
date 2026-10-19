@@ -1,4 +1,3 @@
-import { ChevronDown, LogOut, MessageSquare, Unplug } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
@@ -13,7 +12,6 @@ import {
 } from '../../features/slack/hooks.ts';
 import type { User } from '../../types/api.ts';
 
-/** The sidebar user card: name, email, avatar, and a menu with Slack and Logout. */
 export function UserMenu({ user }: { user: User }) {
   const [open, setOpen] = useState(false);
   const logout = useLogout();
@@ -21,13 +19,15 @@ export function UserMenu({ user }: { user: User }) {
   const disconnect = useDisconnectSlack();
   const [params, setParams] = useSearchParams();
 
-  // The Slack OAuth callback lands back on the dashboard with ?slack=connected|error.
   useEffect(() => {
     const result = params.get('slack');
     if (!result) return;
-    if (result === 'connected')
+    if (result === 'connected') {
       toast.success('Slack connected. Rate-limit alerts will post to your channel.');
-    if (result === 'error') toast.error('Slack could not be connected. Please try again.');
+    }
+    if (result === 'error') {
+      toast.error('Slack could not be connected. Please try again.');
+    }
     setParams({}, { replace: true });
   }, [params, setParams]);
 
@@ -39,30 +39,45 @@ export function UserMenu({ user }: { user: User }) {
       open={open}
       onClose={() => setOpen(false)}
       align="left"
-      panelClassName="w-full min-w-[220px] py-1"
+      panelClassName="w-[236px] p-1.5"
       trigger={
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-haspopup="menu"
           aria-expanded={open}
-          className="flex w-full items-center gap-2.5 rounded-lg bg-surface px-2.5 py-2 text-left transition-colors hover:bg-[#eaf0ec]"
+          className="w-full flex items-center justify-between p-space-sm bg-surface-container-lowest border border-outline-variant/60 rounded-lg hover:border-outline transition-colors text-left group cursor-pointer shadow-xs"
         >
-          <Avatar name={user.name} src={user.avatarUrl} size="sm" />
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[13px] font-medium text-gray-900">
-              {user.name}
-            </span>
-            <span className="block truncate text-[11px] text-gray-500">{user.email}</span>
+          <div className="flex items-center gap-space-sm overflow-hidden min-w-0">
+            <Avatar name={user.name} src={user.avatarUrl} size="sm" />
+            <div className="flex flex-col truncate min-w-0">
+              <span className="font-label-md text-label-md text-on-surface font-medium truncate leading-tight">
+                {user.name}
+              </span>
+              <span className="font-body-sm text-[11px] text-on-surface-variant truncate leading-tight">
+                {user.email}
+              </span>
+            </div>
+          </div>
+          <span className="material-symbols-outlined text-[18px] text-on-surface-variant group-hover:text-on-surface transition-colors shrink-0">
+            unfold_more
           </span>
-          <ChevronDown className="size-3.5 shrink-0 text-gray-400" />
         </button>
       }
     >
-      <div role="menu">
+      <div role="menu" className="flex flex-col gap-0.5">
+        <div className="px-2.5 py-1.5 border-b border-outline-variant/30 mb-1">
+          <p className="font-label-md text-label-md text-on-surface font-semibold truncate">
+            {user.name}
+          </p>
+          <p className="font-mono-metric text-[11px] text-on-surface-variant truncate">
+            {user.email}
+          </p>
+        </div>
+
         {connection?.connected ? (
           <MenuItem
-            icon={<Unplug className="size-4" />}
+            icon={<span className="material-symbols-outlined text-[18px]">link_off</span>}
             disabled={disconnect.isPending}
             onClick={() => {
               disconnect.mutate(undefined, {
@@ -76,7 +91,7 @@ export function UserMenu({ user }: { user: User }) {
           </MenuItem>
         ) : (
           <MenuItem
-            icon={<MessageSquare className="size-4" />}
+            icon={<span className="material-symbols-outlined text-[18px]">chat</span>}
             disabled={!slackAvailable}
             title={
               slackAvailable
@@ -88,8 +103,10 @@ export function UserMenu({ user }: { user: User }) {
             {slackAvailable ? 'Connect Slack' : 'Connect Slack (not configured)'}
           </MenuItem>
         )}
+
         <MenuItem
-          icon={<LogOut className="size-4" />}
+          icon={<span className="material-symbols-outlined text-[18px]">logout</span>}
+          tone="danger"
           disabled={logout.isPending}
           onClick={() => logout.mutate()}
         >

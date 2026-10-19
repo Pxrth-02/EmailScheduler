@@ -1,18 +1,15 @@
-import { Upload, X } from 'lucide-react';
 import { useRef, useState, type ChangeEvent, type ClipboardEvent, type KeyboardEvent } from 'react';
 import { toast } from 'sonner';
 import type { Recipient } from '../../types/api.ts';
 import { isValidEmail, parseRecipients } from './parseRecipients.ts';
 
-interface RecipientsFieldProps {
+export interface RecipientsFieldProps {
   recipients: Recipient[];
   onChange: (recipients: Recipient[]) => void;
 }
 
-/** How many chips to show before collapsing the rest behind a "+N". */
-const VISIBLE_CHIPS = 3;
+const VISIBLE_CHIPS = 4;
 
-/** The "To" row: chips, a free-text input, and the Upload List link from the design. */
 export function RecipientsField({ recipients, onChange }: RecipientsFieldProps) {
   const [draft, setDraft] = useState('');
   const [expanded, setExpanded] = useState(false);
@@ -26,8 +23,8 @@ export function RecipientsField({ recipients, onChange }: RecipientsFieldProps) 
     if (source === 'file') {
       const skipped = incoming.length - fresh.length;
       toast.success(
-        `Detected ${incoming.length} email ${incoming.length === 1 ? 'address' : 'addresses'}` +
-          (skipped > 0 ? ` (${skipped} already added)` : ''),
+        `Loaded ${incoming.length} ${incoming.length === 1 ? 'recipient' : 'recipients'}` +
+          (skipped > 0 ? ` (${skipped} already present)` : ''),
       );
     }
   };
@@ -36,7 +33,6 @@ export function RecipientsField({ recipients, onChange }: RecipientsFieldProps) 
     const value = draft.trim().replace(/[,;]$/, '');
     if (!value) return;
 
-    // One address typed, or several separated by commas / spaces / newlines.
     const parsed = parseRecipients(value.replace(/[,;\s]+/g, '\n'));
     if (parsed.length === 0 || !isValidEmail(parsed[0]!.email)) {
       toast.error(`"${value}" is not a valid email address`);
@@ -82,45 +78,50 @@ export function RecipientsField({ recipients, onChange }: RecipientsFieldProps) 
   const hidden = recipients.length - visible.length;
 
   return (
-    <div className="flex min-h-9 items-center gap-2 border-b border-gray-100 py-1.5">
-      <span className="w-14 shrink-0 text-xs text-gray-600">To</span>
+    <div className="flex min-h-[46px] items-center gap-space-sm border-b border-outline-variant/30 py-2">
+      <span className="w-16 shrink-0 font-label-md text-label-md text-on-surface-variant font-medium">
+        Recipients
+      </span>
 
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
         {visible.map((recipient) => (
           <span
             key={recipient.email}
             title={recipient.name ? `${recipient.name} <${recipient.email}>` : recipient.email}
-            className="inline-flex h-6 max-w-[220px] items-center gap-1 rounded-full border border-brand/40 bg-white pr-1 pl-2.5 text-xs text-gray-800"
+            className="inline-flex h-7 max-w-[240px] items-center gap-1.5 rounded-lg border border-outline-variant/60 bg-surface-container-low pl-2.5 pr-1.5 font-mono-metric text-[12px] text-on-surface shadow-xs transition-colors"
           >
             <span className="truncate">{recipient.email}</span>
             <button
               type="button"
               aria-label={`Remove ${recipient.email}`}
               onClick={() => remove(recipient.email)}
-              className="flex size-4 items-center justify-center rounded-full text-gray-400 hover:bg-brand-soft hover:text-gray-700"
+              className="flex size-4 items-center justify-center rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface cursor-pointer"
             >
-              <X className="size-3" />
+              <span className="text-[12px] leading-none">✕</span>
             </button>
           </span>
         ))}
+
         {hidden > 0 && (
           <button
             type="button"
             onClick={() => setExpanded(true)}
-            className="inline-flex h-6 items-center rounded-full border border-brand/40 px-2.5 text-xs text-gray-800 hover:bg-brand-soft"
+            className="inline-flex h-7 items-center rounded-lg border border-outline-variant/60 bg-surface-container px-2 font-mono-metric text-[11px] text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer"
           >
-            +{hidden}
+            +{hidden} more
           </button>
         )}
+
         {expanded && recipients.length > VISIBLE_CHIPS && (
           <button
             type="button"
             onClick={() => setExpanded(false)}
-            className="text-xs text-gray-400 hover:text-gray-600"
+            className="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface cursor-pointer"
           >
             show less
           </button>
         )}
+
         <input
           type="text"
           value={draft}
@@ -128,9 +129,9 @@ export function RecipientsField({ recipients, onChange }: RecipientsFieldProps) 
           onKeyDown={onKeyDown}
           onBlur={commitDraft}
           onPaste={onPaste}
-          placeholder={recipients.length === 0 ? 'recipient@example.com' : ''}
+          placeholder={recipients.length === 0 ? 'Enter email address (or paste comma-separated list)...' : 'Add another...'}
           aria-label="Add recipient"
-          className="h-6 min-w-[180px] flex-1 bg-transparent text-[13px] text-gray-900 outline-none placeholder:text-gray-400"
+          className="h-7 min-w-[200px] flex-1 bg-transparent font-body-base text-body-base text-on-surface outline-none placeholder:text-on-surface-variant/60"
         />
       </div>
 
@@ -144,10 +145,10 @@ export function RecipientsField({ recipients, onChange }: RecipientsFieldProps) 
       <button
         type="button"
         onClick={() => fileInput.current?.click()}
-        className="inline-flex shrink-0 items-center gap-1.5 text-[13px] font-medium text-brand hover:underline"
+        className="inline-flex shrink-0 items-center gap-1.5 px-2.5 py-1 rounded-lg border border-outline-variant/60 hover:border-primary bg-surface-container-lowest font-label-md text-label-md text-on-surface hover:text-primary transition-colors cursor-pointer shadow-xs"
       >
-        <Upload className="size-3.5" />
-        Upload List
+        <span className="material-symbols-outlined text-[16px] text-primary">upload_file</span>
+        <span>Upload CSV</span>
       </button>
     </div>
   );
